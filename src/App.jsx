@@ -12,6 +12,7 @@ import ContractNoteModal from './components/ContractNoteModal';
 import PricingFAQ from './components/PricingFAQ';
 import { calculateCharges, BROKERS, SEGMENTS, EXCHANGES } from './utils/calculator';
 import { FileText } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('single');
@@ -291,6 +292,9 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Vercel Web Analytics */}
+      <Analytics />
     </div>
   );
 }
