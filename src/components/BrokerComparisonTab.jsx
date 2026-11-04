@@ -1,9 +1,16 @@
 import React from 'react';
 import { getBrokerComparison, formatINR } from '../utils/calculator';
-import { ShieldCheck, ArrowRight, ExternalLink, Award } from 'lucide-react';
+import { ShieldCheck, ArrowRight, ExternalLink, Award, CheckCircle2 } from 'lucide-react';
 
-export default function BrokerComparisonTab({ buyPrice, sellPrice, quantity, segment, exchange }) {
-  const comparisons = getBrokerComparison({ buyPrice, sellPrice, quantity, segment, exchange });
+export default function BrokerComparisonTab({ buyPrice, sellPrice, quantity, segment, exchange, selectedBrokerId, onSelectBroker }) {
+  const comparisons = getBrokerComparison({
+    buyPrice,
+    sellPrice,
+    quantity,
+    segment,
+    exchange,
+    selectedBrokerId,
+  });
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
@@ -11,7 +18,7 @@ export default function BrokerComparisonTab({ buyPrice, sellPrice, quantity, seg
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-white">Broker Charges Comparison</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Compare total deductions and net profit between Groww, Zerodha, Angel One, and Upstox for this exact trade.
+            Compare total deductions, DP charges, and net take-home profit across India's top discount brokers for this exact trade.
           </p>
         </div>
         <div className="text-xs text-slate-400">
@@ -19,38 +26,45 @@ export default function BrokerComparisonTab({ buyPrice, sellPrice, quantity, seg
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {comparisons.map((c) => {
-          const isGroww = c.isCurrent;
+          const isSelected = c.isCurrent;
           const isProfitable = c.netPnL > 0;
 
           return (
             <div
               key={c.broker}
-              className={`rounded-2xl p-5 border transition-all relative ${
-                isGroww
-                  ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-500 shadow-md ring-2 ring-emerald-500/20'
-                  : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 hover:border-slate-300'
+              onClick={() => onSelectBroker && onSelectBroker(c.brokerId)}
+              className={`rounded-2xl p-5 border transition-all cursor-pointer relative ${
+                isSelected
+                  ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-500 shadow-md ring-2 ring-emerald-500/30'
+                  : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
               }`}
             >
-              {isGroww && (
-                <div className="absolute -top-3 left-4 bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-xs">
-                  <Award className="w-3 h-3" />
-                  <span>Current Calculator (Groww)</span>
+              {isSelected && (
+                <div className="absolute -top-3 left-4 bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-xs">
+                  <CheckCircle2 className="w-3 h-3" />
+                  <span>Currently Active</span>
                 </div>
               )}
 
               <div className="flex items-center justify-between mb-3 mt-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   <span className="text-2xl">{c.logo}</span>
                   <div>
                     <h3 className="font-bold text-slate-900 dark:text-white text-base">{c.broker}</h3>
-                    <span className="text-[10px] text-slate-400 block">{c.deliveryFeeText}</span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block">{c.deliveryFeeText}</span>
                   </div>
                 </div>
+
+                {!isSelected && (
+                  <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2 py-1 rounded-md">
+                    Select
+                  </span>
+                )}
               </div>
 
-              <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-700 text-xs">
+              <div className="space-y-2.5 pt-3 border-t border-slate-100 dark:border-slate-700 text-xs">
                 <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
                   <span>Brokerage:</span>
                   <span className="font-bold text-slate-900 dark:text-white font-mono">
@@ -59,7 +73,7 @@ export default function BrokerComparisonTab({ buyPrice, sellPrice, quantity, seg
                 </div>
 
                 <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                  <span>Total Taxes & Charges:</span>
+                  <span>Total Taxes & Fees:</span>
                   <span className="font-bold text-amber-600 dark:text-amber-400 font-mono">
                     {formatINR(c.totalCharges)}
                   </span>
@@ -83,10 +97,11 @@ export default function BrokerComparisonTab({ buyPrice, sellPrice, quantity, seg
 
       {/* Comparison Notes */}
       <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 text-xs text-slate-600 dark:text-slate-400 space-y-1">
-        <div className="font-bold text-slate-900 dark:text-white mb-1">Key Differences Summary:</div>
-        <p>• <strong>Groww:</strong> Charges ₹20 or 0.05% (whichever is lower) for Equity Delivery & Intraday trades. DP charge is ₹13.50 + GST (₹15.93).</p>
-        <p>• <strong>Zerodha:</strong> Free ₹0 brokerage for Equity Delivery, ₹20/0.03% for Intraday. DP charge is ₹13.50 + GST.</p>
-        <p>• <strong>Statutory Taxes (STT, Stamp Duty, GST, Exchange txn, SEBI):</strong> Are mandated by the Government of India / SEBI and are exactly identical across all brokers.</p>
+        <div className="font-bold text-slate-900 dark:text-white mb-1">Key Takeaway:</div>
+        <p>• <strong>Groww & Upstox:</strong> Charge up to ₹20 per trade for Delivery & Intraday.</p>
+        <p>• <strong>Zerodha & Dhan:</strong> Offer ₹0 brokerage on Equity Delivery, and charge ₹20/0.03% on Intraday.</p>
+        <p>• <strong>DP Charges:</strong> Differ per broker (Dhan: ₹14.75, Kotak: ₹15.34, Groww & Zerodha: ₹15.93, Upstox: ₹21.83, Angel One: ₹23.60).</p>
+        <p>• <strong>Statutory Taxes (STT, Stamp Duty, GST, Exchange txn, SEBI):</strong> Are mandated by the Government of India / SEBI and are identical across all brokers.</p>
       </div>
     </div>
   );

@@ -17,8 +17,10 @@ export default function PnLSummaryCard({ result, buyPrice, sellPrice, quantity, 
     chargePercentageOfProfit,
     buyTurnover,
     sellTurnover,
+    broker,
   } = result;
 
+  const brokerName = broker?.name || 'broker';
   const isProfit = netPnL > 0;
   const isBreakEven = Math.abs(netPnL) < 1;
   const isLoss = netPnL < 0 && !isBreakEven;
@@ -95,7 +97,7 @@ export default function PnLSummaryCard({ result, buyPrice, sellPrice, quantity, 
             </div>
 
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Actual amount credited / debited after all Groww fees, STT, Exchange, GST & DP charges.
+              Actual amount credited / debited after all {brokerName} fees, STT, Exchange, GST & DP charges.
             </p>
           </div>
 

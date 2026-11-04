@@ -8,16 +8,17 @@ export default function ChargesBreakdownTable({ result, exchange, segment }) {
 
   if (!result || !result.breakdown) return null;
 
-  const { breakdown, buyTurnover, sellTurnover, totalTurnover, totalCharges } = result;
+  const { breakdown, buyTurnover, sellTurnover, totalTurnover, totalCharges, broker } = result;
+  const brokerName = broker?.name || 'Broker';
 
   const handleCopySummary = () => {
     const text = `
-Groww Brokerage & Charges Summary:
+${brokerName} Brokerage & Charges Summary:
 - Buy Turnover: ${formatINR(buyTurnover)}
 - Sell Turnover: ${formatINR(sellTurnover)}
 - Total Turnover: ${formatINR(totalTurnover)}
 --------------------------------
-- Groww Brokerage: ${formatINR(breakdown.brokerage.total)}
+- ${brokerName} Brokerage: ${formatINR(breakdown.brokerage.total)}
 - STT / CTT: ${formatINR(breakdown.stt.total)}
 - Exchange Txn Charges: ${formatINR(breakdown.exchangeTxn.total)}
 - DP Charges (incl GST): ${formatINR(breakdown.dpCharges.total)}
@@ -43,7 +44,7 @@ Net P&L: ${formatINR(result.netPnL)}
       buy: breakdown.brokerage.buy,
       sell: breakdown.brokerage.sell,
       total: breakdown.brokerage.total,
-      tag: 'Groww Fee',
+      tag: `${brokerName} Fee`,
       tagColor: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
     },
     {
@@ -70,13 +71,13 @@ Net P&L: ${formatINR(result.netPnL)}
       buy: 0,
       sell: breakdown.dpCharges.total,
       total: breakdown.dpCharges.total,
-      tag: 'CDSL / Groww',
+      tag: 'CDSL / Depository',
       tagColor: 'bg-pink-100 text-pink-800 dark:bg-pink-950 dark:text-pink-300',
     },
     {
       title: 'GST (18%)',
       desc: breakdown.gst.description,
-      buy: breakdown.gst.total / 2, // approximated split for display
+      buy: breakdown.gst.total / 2,
       sell: breakdown.gst.total / 2,
       total: breakdown.gst.total,
       tag: 'Govt Tax',
@@ -121,7 +122,7 @@ Net P&L: ${formatINR(result.netPnL)}
           <div>
             <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Itemized Charges Breakdown</h3>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Complete regulatory and statutory deductions
+              Complete {brokerName} & regulatory statutory deductions
             </p>
           </div>
         </div>
@@ -198,7 +199,7 @@ Net P&L: ${formatINR(result.netPnL)}
           <tfoot>
             <tr className="border-t-2 border-slate-300 dark:border-slate-700 font-bold bg-slate-50/50 dark:bg-slate-800/30">
               <td className="py-3 pl-2 text-slate-900 dark:text-white">
-                Total Taxes & Brokerage
+                Total Taxes & {brokerName} Fees
               </td>
               <td className="py-3 text-right font-mono text-slate-500">
                 {formatINR(
@@ -231,16 +232,16 @@ Net P&L: ${formatINR(result.netPnL)}
       </div>
 
       {/* Explanatory notes */}
-      <div className="mt-4 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/50 text-[11px] text-amber-900 dark:text-amber-200 space-y-1">
-        <div className="font-semibold flex items-center gap-1.5">
-          <HelpCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-          <span>Groww Pricing Key Rules:</span>
+      <div className="mt-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 text-[11px] text-slate-700 dark:text-slate-300 space-y-1">
+        <div className="font-semibold flex items-center gap-1.5 text-slate-900 dark:text-white">
+          <HelpCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+          <span>{brokerName} Pricing Rules:</span>
         </div>
-        <ul className="list-disc list-inside space-y-0.5 text-[10.5px] text-amber-800 dark:text-amber-300/90 pl-1">
-          <li><strong>Equity Delivery Brokerage:</strong> ₹20 or 0.05% of order value per executed order, whichever is lower.</li>
-          <li><strong>Equity Intraday Brokerage:</strong> ₹20 or 0.05% of order value per executed order, whichever is lower.</li>
-          <li><strong>DP Charges:</strong> ₹13.50 + 18% GST (₹15.93) is charged per company (ISIN) sold on delivery, irrespective of quantity.</li>
-          <li><strong>Stamp Duty:</strong> 0.015% is charged only on the BUY value for Delivery trades.</li>
+        <ul className="list-disc list-inside space-y-0.5 text-[10.5px] text-slate-600 dark:text-slate-400 pl-1">
+          <li><strong>Delivery Brokerage:</strong> {broker?.deliveryText || 'Standard Delivery Rates'}</li>
+          <li><strong>Intraday Brokerage:</strong> {broker?.intradayText || 'Standard Intraday Rates'}</li>
+          <li><strong>DP Charges:</strong> ₹{broker?.dpBaseCharge?.toFixed(2) || '13.50'} + 18% GST (₹{broker?.dpTotalWithGst?.toFixed(2) || '15.93'}) per ISIN sold on delivery.</li>
+          <li><strong>Stamp Duty:</strong> 0.015% is charged on the BUY value only for Delivery trades.</li>
         </ul>
       </div>
     </div>

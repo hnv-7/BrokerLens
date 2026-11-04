@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, HelpCircle, BookOpen, ExternalLink } from 'lucide-react';
+import { BROKER_LIST } from '../utils/calculator';
 
-export default function PricingFAQ() {
+export default function PricingFAQ({ selectedBrokerId = 'groww' }) {
   const [openIdx, setOpenIdx] = useState(0);
+
+  const activeBroker = BROKER_LIST.find((b) => b.id === selectedBrokerId) || BROKER_LIST[0];
 
   const faqs = [
     {
-      q: 'How does Groww calculate brokerage on Equity Delivery & Intraday?',
-      a: 'For Equity Delivery and Equity Intraday, Groww charges ₹20 or 0.05% of the order value per executed order, whichever is lower. For example, on a ₹10,000 order, 0.05% is ₹5, so Groww charges ₹5. On a ₹1,00,000 order, 0.05% would be ₹50, but since the maximum cap is ₹20, Groww charges ₹20.',
+      q: `How does ${activeBroker.name} calculate brokerage?`,
+      a: `For Equity Delivery, ${activeBroker.name} charges ${activeBroker.deliveryText}. For Equity Intraday, it charges ${activeBroker.intradayText}. For Futures & Options, it charges ${activeBroker.foText}.`,
     },
     {
-      q: 'What are DP (Depository Participant) Charges on Groww?',
-      a: 'DP charge is ₹13.50 + 18% GST (total ₹15.93) levied whenever you SELL shares from your Demat account (Delivery trades). This charge is applied per company (ISIN) debited per day, regardless of whether you sold 1 share or 10,000 shares of that company. DP charges are NOT applicable on Intraday or F&O trades.',
+      q: `What are DP (Depository Participant) Charges on ${activeBroker.name}?`,
+      a: `For ${activeBroker.name}, DP charge is ₹${activeBroker.dpBaseCharge.toFixed(2)} + 18% GST (total ₹${activeBroker.dpTotalWithGst.toFixed(2)}) levied whenever you SELL shares from your Demat account (Delivery trades). This charge is applied per company (ISIN) debited per day, regardless of whether you sold 1 share or 10,000 shares of that company. DP charges are NOT applicable on Intraday or F&O trades.`,
     },
     {
       q: 'How is STT (Securities Transaction Tax) calculated?',
@@ -26,8 +29,8 @@ export default function PricingFAQ() {
       a: 'GST is charged at 18% on the taxable services provided, which includes Brokerage + Exchange Transaction Charges + SEBI Turnover Charges + Base DP Charges. Note: GST is NOT charged on STT or Stamp Duty.',
     },
     {
-      q: 'What is the Breakeven price in this calculator?',
-      a: 'Breakeven price is the exact price per share you must sell at so that your Net P&L is exactly ₹0.00 after paying all brokerage fees, STT, Exchange transaction charges, GST, SEBI charges, Stamp duty, and DP charges.',
+      q: 'What is the Breakeven price in BrokerLens?',
+      a: `Breakeven price is the exact price per share you must sell at so that your Net P&L is exactly ₹0.00 after paying all ${activeBroker.name} brokerage fees, STT, Exchange transaction charges, GST, SEBI charges, Stamp duty, and DP charges.`,
     },
   ];
 
@@ -36,17 +39,11 @@ export default function PricingFAQ() {
       <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
         <div className="flex items-center gap-2">
           <BookOpen className="w-4 h-4 text-emerald-500" />
-          <h3 className="font-bold text-sm text-slate-900 dark:text-white">Groww Charges & Taxes Explained (FAQ)</h3>
+          <h3 className="font-bold text-sm text-slate-900 dark:text-white">{activeBroker.name} & Statutory Taxes Explained (FAQ)</h3>
         </div>
-        <a
-          href="https://groww.in/pricing"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-medium"
-        >
-          <span>Official Groww Pricing</span>
-          <ExternalLink className="w-3 h-3" />
-        </a>
+        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+          Indian Stock Market Rules
+        </span>
       </div>
 
       <div className="divide-y divide-slate-100 dark:divide-slate-800">

@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { calculateCharges, formatINR, SEGMENTS, EXCHANGES } from '../utils/calculator';
+import { calculateCharges, formatINR, BROKER_LIST, SEGMENTS, EXCHANGES } from '../utils/calculator';
 import { Plus, Trash2, Layers, ArrowUpRight, ArrowDownRight, RefreshCw, Sparkles } from 'lucide-react';
 
-export default function MultiStockPortfolio() {
+export default function MultiStockPortfolio({ selectedBrokerId = 'groww' }) {
   const [stocks, setStocks] = useState([
-    { id: 1, name: 'Reliance Industries', buyPrice: 2850, sellPrice: 3050, qty: 50, segment: SEGMENTS.DELIVERY, exchange: EXCHANGES.NSE },
-    { id: 2, name: 'Tata Motors', buyPrice: 880, sellPrice: 960, qty: 100, segment: SEGMENTS.DELIVERY, exchange: EXCHANGES.NSE },
-    { id: 3, name: 'Zomato', buyPrice: 210, sellPrice: 250, qty: 400, segment: SEGMENTS.DELIVERY, exchange: EXCHANGES.NSE },
+    { id: 1, name: 'Reliance Industries', buyPrice: 2850, sellPrice: 3050, qty: 50, segment: SEGMENTS.DELIVERY, exchange: EXCHANGES.NSE, brokerId: selectedBrokerId },
+    { id: 2, name: 'Tata Motors', buyPrice: 880, sellPrice: 960, qty: 100, segment: SEGMENTS.DELIVERY, exchange: EXCHANGES.NSE, brokerId: selectedBrokerId },
+    { id: 3, name: 'Zomato', buyPrice: 210, sellPrice: 250, qty: 400, segment: SEGMENTS.DELIVERY, exchange: EXCHANGES.NSE, brokerId: selectedBrokerId },
   ]);
 
   const [newStock, setNewStock] = useState({
@@ -16,6 +16,7 @@ export default function MultiStockPortfolio() {
     qty: '',
     segment: SEGMENTS.DELIVERY,
     exchange: EXCHANGES.NSE,
+    brokerId: selectedBrokerId,
   });
 
   const handleAddStock = (e) => {
@@ -32,6 +33,7 @@ export default function MultiStockPortfolio() {
         qty: Number(newStock.qty),
         segment: newStock.segment,
         exchange: newStock.exchange,
+        brokerId: newStock.brokerId || selectedBrokerId,
       },
     ]);
 
@@ -42,6 +44,7 @@ export default function MultiStockPortfolio() {
       qty: '',
       segment: SEGMENTS.DELIVERY,
       exchange: EXCHANGES.NSE,
+      brokerId: selectedBrokerId,
     });
   };
 
@@ -58,6 +61,7 @@ export default function MultiStockPortfolio() {
       quantity: s.qty,
       segment: s.segment,
       exchange: s.exchange,
+      brokerId: s.brokerId || selectedBrokerId,
     }),
   }));
 
@@ -78,7 +82,7 @@ export default function MultiStockPortfolio() {
           <div>
             <h2 className="text-lg font-bold text-slate-900 dark:text-white">Multi-Stock Portfolio Calculator</h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Calculate combined Groww brokerage, DP charges, and net profit across multiple stocks.
+              Calculate combined brokerage, DP debits, statutory taxes, and net profit across multiple stocks.
             </p>
           </div>
         </div>
@@ -135,7 +139,7 @@ export default function MultiStockPortfolio() {
               <th className="pb-3 text-right">Buy Price</th>
               <th className="pb-3 text-right">Sell Price</th>
               <th className="pb-3 text-right">Gross P&L</th>
-              <th className="pb-3 text-right">Groww Fees</th>
+              <th className="pb-3 text-right">Total Fees</th>
               <th className="pb-3 text-right">Net P&L</th>
               <th className="pb-3 text-center">Action</th>
             </tr>
@@ -145,7 +149,7 @@ export default function MultiStockPortfolio() {
               <tr key={s.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
                 <td className="py-3 pl-2 font-bold text-slate-900 dark:text-white">
                   {s.name}
-                  <span className="text-[10px] block font-normal text-slate-400">{s.segment.toUpperCase()} • {s.exchange}</span>
+                  <span className="text-[10px] block font-normal text-slate-400">{s.calc.broker.name} • {s.segment.toUpperCase()} • {s.exchange}</span>
                 </td>
                 <td className="py-3 text-right font-mono text-slate-700 dark:text-slate-300">{s.qty}</td>
                 <td className="py-3 text-right font-mono text-slate-700 dark:text-slate-300">{formatINR(s.buyPrice)}</td>
@@ -178,7 +182,7 @@ export default function MultiStockPortfolio() {
           <span>Add Position to Portfolio</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-6 gap-3">
           <input
             type="text"
             placeholder="Stock Name (e.g. Infosys)"
@@ -187,6 +191,17 @@ export default function MultiStockPortfolio() {
             className="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs"
             required
           />
+          <select
+            value={newStock.brokerId}
+            onChange={(e) => setNewStock({ ...newStock, brokerId: e.target.value })}
+            className="px-2 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs"
+          >
+            {BROKER_LIST.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.logo} {b.name}
+              </option>
+            ))}
+          </select>
           <input
             type="number"
             placeholder="Buy Price (₹)"
@@ -209,7 +224,7 @@ export default function MultiStockPortfolio() {
           />
           <input
             type="number"
-            placeholder="Quantity (Shares)"
+            placeholder="Qty"
             min="1"
             value={newStock.qty}
             onChange={(e) => setNewStock({ ...newStock, qty: e.target.value })}

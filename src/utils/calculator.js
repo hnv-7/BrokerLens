@@ -1,7 +1,120 @@
 /**
- * Groww Brokerage and Charges Calculation Engine
- * Based on official Groww pricing structure (https://groww.in/pricing) and Indian stock market statutory regulations.
+ * BrokerLens Universal Stock Brokerage & Charges Calculation Engine
+ * Supports Groww (Default), Zerodha, Angel One, Upstox, Dhan, Kotak Neo, and ICICI Direct.
  */
+
+export const BROKERS = {
+  GROWW: {
+    id: 'groww',
+    name: 'Groww',
+    logo: '🌱',
+    themeColor: 'emerald',
+    deliveryText: '₹20 or 0.05% (whichever is lower)',
+    intradayText: '₹20 or 0.05% (whichever is lower)',
+    foText: 'Flat ₹20 / order',
+    dpBaseCharge: 13.5, // ₹13.50 + 18% GST = ₹15.93
+    dpTotalWithGst: 15.93,
+    deliveryRate: 0.0005, // 0.05%
+    deliveryMaxCap: 20,
+    intradayRate: 0.0005, // 0.05%
+    intradayMaxCap: 20,
+    foRate: 20,
+    sebiRegNo: 'INZ000208032',
+    entityName: 'Nextbillion Technology Pvt Ltd',
+  },
+  ZERODHA: {
+    id: 'zerodha',
+    name: 'Zerodha',
+    logo: '🪁',
+    themeColor: 'blue',
+    deliveryText: '₹0 (Free Equity Delivery)',
+    intradayText: '₹20 or 0.03% (whichever is lower)',
+    foText: 'Flat ₹20 / order',
+    dpBaseCharge: 13.5, // ₹13.50 + 18% GST = ₹15.93
+    dpTotalWithGst: 15.93,
+    deliveryRate: 0,
+    deliveryMaxCap: 0,
+    intradayRate: 0.0003, // 0.03%
+    intradayMaxCap: 20,
+    foRate: 20,
+    sebiRegNo: 'INZ000031633',
+    entityName: 'Zerodha Broking Ltd',
+  },
+  ANGEL_ONE: {
+    id: 'angelone',
+    name: 'Angel One',
+    logo: '👼',
+    themeColor: 'red',
+    deliveryText: '₹20 or 0.1% (whichever is lower)',
+    intradayText: '₹20 or 0.25% (whichever is lower)',
+    foText: 'Flat ₹20 / order',
+    dpBaseCharge: 20.0, // ₹20 + 18% GST = ₹23.60
+    dpTotalWithGst: 23.6,
+    deliveryRate: 0.001, // 0.1%
+    deliveryMaxCap: 20,
+    intradayRate: 0.0025, // 0.25%
+    intradayMaxCap: 20,
+    foRate: 20,
+    sebiRegNo: 'INZ000161534',
+    entityName: 'Angel One Limited',
+  },
+  UPSTOX: {
+    id: 'upstox',
+    name: 'Upstox',
+    logo: '🚀',
+    themeColor: 'purple',
+    deliveryText: '₹20 or 2.5% (whichever is lower, max ₹20)',
+    intradayText: '₹20 or 0.05% (whichever is lower)',
+    foText: 'Flat ₹20 / order',
+    dpBaseCharge: 18.5, // ₹18.50 + 18% GST = ₹21.83
+    dpTotalWithGst: 21.83,
+    deliveryRate: 0.025,
+    deliveryMaxCap: 20,
+    intradayRate: 0.0005,
+    intradayMaxCap: 20,
+    foRate: 20,
+    sebiRegNo: 'INZ000015837',
+    entityName: 'RKSV Securities India Pvt Ltd',
+  },
+  DHAN: {
+    id: 'dhan',
+    name: 'Dhan',
+    logo: '⚡',
+    themeColor: 'amber',
+    deliveryText: '₹0 (Free Equity Delivery)',
+    intradayText: '₹20 or 0.03% (whichever is lower)',
+    foText: 'Flat ₹20 / order',
+    dpBaseCharge: 12.5, // ₹12.50 + 18% GST = ₹14.75
+    dpTotalWithGst: 14.75,
+    deliveryRate: 0,
+    deliveryMaxCap: 0,
+    intradayRate: 0.0003,
+    intradayMaxCap: 20,
+    foRate: 20,
+    sebiRegNo: 'INZ000006031',
+    entityName: 'Moneylicious Securities Pvt Ltd',
+  },
+  KOTAK_NEO: {
+    id: 'kotak',
+    name: 'Kotak Neo',
+    logo: '🏛️',
+    themeColor: 'rose',
+    deliveryText: '₹0 (Trade Free Plan)',
+    intradayText: '₹0 (Trade Free Plan)',
+    foText: 'Flat ₹20 / order',
+    dpBaseCharge: 13.0, // ₹13.00 + 18% GST = ₹15.34
+    dpTotalWithGst: 15.34,
+    deliveryRate: 0,
+    deliveryMaxCap: 0,
+    intradayRate: 0,
+    intradayMaxCap: 0,
+    foRate: 20,
+    sebiRegNo: 'INZ000200137',
+    entityName: 'Kotak Securities Limited',
+  },
+};
+
+export const BROKER_LIST = Object.values(BROKERS);
 
 export const SEGMENTS = {
   DELIVERY: 'delivery',
@@ -30,6 +143,7 @@ export function calculateCharges({
   quantity = 0,
   segment = SEGMENTS.DELIVERY,
   exchange = EXCHANGES.NSE,
+  brokerId = 'groww',
   buyOrdersCount = 1,
   sellOrdersCount = 1,
   isinCount = 1, // Number of company stocks debited for DP charges
@@ -41,37 +155,49 @@ export function calculateCharges({
   const safeSellOrders = Math.max(1, Number(sellOrdersCount) || 1);
   const safeIsinCount = Math.max(1, Number(isinCount) || 1);
 
+  // Find active broker configuration
+  const activeBroker = Object.values(BROKERS).find((b) => b.id === brokerId) || BROKERS.GROWW;
+
   const buyTurnover = safeBuyPrice * safeQty;
   const sellTurnover = safeSellPrice * safeQty;
   const totalTurnover = buyTurnover + sellTurnover;
 
-  // 1. Brokerage:
-  // Groww Equity Delivery & Intraday: ₹20 or 0.05% of order value per executed order, whichever is lower.
-  // F&O: Flat ₹20 per executed order.
+  // 1. Brokerage based on selected broker:
   let buyBrokerage = 0;
   let sellBrokerage = 0;
 
-  if (segment === SEGMENTS.DELIVERY || segment === SEGMENTS.INTRADAY) {
-    // 0.05% or Rs 20 whichever is lower per order
+  if (segment === SEGMENTS.DELIVERY) {
     const buyOrderTurnover = buyTurnover / safeBuyOrders;
-    const singleBuyBrokerage = Math.min(20, buyOrderTurnover * 0.0005);
-    buyBrokerage = singleBuyBrokerage * safeBuyOrders;
+    const singleBuy = activeBroker.deliveryRate === 0
+      ? 0
+      : Math.min(activeBroker.deliveryMaxCap, buyOrderTurnover * activeBroker.deliveryRate);
+    buyBrokerage = singleBuy * safeBuyOrders;
 
     const sellOrderTurnover = sellTurnover / safeSellOrders;
-    const singleSellBrokerage = Math.min(20, sellOrderTurnover * 0.0005);
-    sellBrokerage = singleSellBrokerage * safeSellOrders;
+    const singleSell = activeBroker.deliveryRate === 0
+      ? 0
+      : Math.min(activeBroker.deliveryMaxCap, sellOrderTurnover * activeBroker.deliveryRate);
+    sellBrokerage = singleSell * safeSellOrders;
+  } else if (segment === SEGMENTS.INTRADAY) {
+    const buyOrderTurnover = buyTurnover / safeBuyOrders;
+    const singleBuy = activeBroker.intradayRate === 0
+      ? 0
+      : Math.min(activeBroker.intradayMaxCap, buyOrderTurnover * activeBroker.intradayRate);
+    buyBrokerage = singleBuy * safeBuyOrders;
+
+    const sellOrderTurnover = sellTurnover / safeSellOrders;
+    const singleSell = activeBroker.intradayRate === 0
+      ? 0
+      : Math.min(activeBroker.intradayMaxCap, sellOrderTurnover * activeBroker.intradayRate);
+    sellBrokerage = singleSell * safeSellOrders;
   } else if (segment === SEGMENTS.FUTURES || segment === SEGMENTS.OPTIONS) {
-    buyBrokerage = 20 * safeBuyOrders;
-    sellBrokerage = 20 * safeSellOrders;
+    buyBrokerage = activeBroker.foRate * safeBuyOrders;
+    sellBrokerage = activeBroker.foRate * safeSellOrders;
   }
 
   const totalBrokerage = buyBrokerage + sellBrokerage;
 
-  // 2. STT (Securities Transaction Tax) / CTT
-  // Delivery: 0.1% on Buy & 0.1% on Sell
-  // Intraday: 0.025% on Sell only
-  // Futures: 0.02% on Sell only
-  // Options: 0.125% on Sell only (on premium)
+  // 2. STT (Securities Transaction Tax) / CTT (Statutory across all brokers)
   let buySTT = 0;
   let sellSTT = 0;
 
@@ -92,14 +218,6 @@ export function calculateCharges({
   const totalSTT = buySTT + sellSTT;
 
   // 3. Exchange Transaction Charges
-  // NSE:
-  //   Equity Delivery/Intraday: 0.00297%
-  //   Futures: 0.00173%
-  //   Options: 0.03503%
-  // BSE:
-  //   Equity Delivery/Intraday: 0.00375%
-  //   Futures: 0.00005%
-  //   Options: 0.0325%
   let exchangeRate = 0.0000297;
   if (exchange === EXCHANGES.NSE) {
     if (segment === SEGMENTS.DELIVERY || segment === SEGMENTS.INTRADAY) {
@@ -124,26 +242,21 @@ export function calculateCharges({
   const sellExchangeTxn = sellTurnover * exchangeRate;
   const totalExchangeTxn = buyExchangeTxn + sellExchangeTxn;
 
-  // 4. DP (Depository Participant) Charges
-  // Groww DP Charges: ₹13.50 + 18% GST (₹15.93 per company/ISIN debit on SELL side for Delivery only)
+  // 4. DP (Depository Participant) Charges based on active broker:
   let dpBaseCharge = 0;
   if (segment === SEGMENTS.DELIVERY && safeQty > 0 && safeSellPrice > 0) {
-    dpBaseCharge = 13.5 * safeIsinCount;
+    dpBaseCharge = activeBroker.dpBaseCharge * safeIsinCount;
   }
   const dpGST = dpBaseCharge * 0.18;
   const totalDPCharge = dpBaseCharge + dpGST;
 
   // 5. SEBI Turnover Charges: ₹10 per crore (0.0001% of turnover)
-  const sebiRate = 0.000001; // 10 / 10,000,000
+  const sebiRate = 0.000001;
   const buySebi = buyTurnover * sebiRate;
   const sellSebi = sellTurnover * sebiRate;
   const totalSebi = buySebi + sellSebi;
 
   // 6. Stamp Duty:
-  // Delivery: 0.015% on BUY side
-  // Intraday: 0.003% on BUY side
-  // Futures: 0.002% on BUY side
-  // Options: 0.003% on BUY side
   let stampDutyRate = 0.00015;
   if (segment === SEGMENTS.DELIVERY) stampDutyRate = 0.00015;
   else if (segment === SEGMENTS.INTRADAY) stampDutyRate = 0.00003;
@@ -153,7 +266,6 @@ export function calculateCharges({
   const totalStampDuty = Math.round(buyTurnover * stampDutyRate);
 
   // 7. IPFT (Investor Protection Fund Trust):
-  // NSE Equity: ₹10 / crore (0.0001%) on turnover
   let ipftRate = 0;
   if (exchange === EXCHANGES.NSE) {
     ipftRate = 0.000001;
@@ -174,7 +286,6 @@ export function calculateCharges({
   const netROI = buyTurnover > 0 ? (netPnL / buyTurnover) * 100 : 0;
 
   // Points to Breakeven
-  // Calculate price per share increase needed to cover total charges
   const pointsToBreakeven = safeQty > 0 ? totalCharges / safeQty : 0;
   const breakevenPrice = safeBuyPrice + pointsToBreakeven;
 
@@ -182,6 +293,7 @@ export function calculateCharges({
   const chargePercentageOfProfit = grossPnL > 0 ? (totalCharges / grossPnL) * 100 : 0;
 
   return {
+    broker: activeBroker,
     buyTurnover,
     sellTurnover,
     totalTurnover,
@@ -198,7 +310,11 @@ export function calculateCharges({
         buy: buyBrokerage,
         sell: sellBrokerage,
         total: totalBrokerage,
-        description: segment === SEGMENTS.FUTURES || segment === SEGMENTS.OPTIONS ? '₹20 flat per executed order' : '₹20 or 0.05% per order (whichever is lower)',
+        description: segment === SEGMENTS.DELIVERY
+          ? activeBroker.deliveryText
+          : segment === SEGMENTS.INTRADAY
+          ? activeBroker.intradayText
+          : activeBroker.foText,
       },
       stt: {
         buy: buySTT,
@@ -216,7 +332,7 @@ export function calculateCharges({
         base: dpBaseCharge,
         gst: dpGST,
         total: totalDPCharge,
-        description: segment === SEGMENTS.DELIVERY ? '₹13.50 + 18% GST (₹15.93 per stock debit on Sell)' : '₹0 for Intraday/F&O',
+        description: segment === SEGMENTS.DELIVERY ? `₹${activeBroker.dpBaseCharge.toFixed(2)} + 18% GST (₹${activeBroker.dpTotalWithGst.toFixed(2)} per stock debit on Sell)` : '₹0 for Intraday/F&O',
       },
       gst: {
         taxableValue,
@@ -242,102 +358,33 @@ export function calculateCharges({
 }
 
 /**
- * Compare charges across popular Indian discount brokers for the same trade.
+ * Compare charges across all supported Indian discount brokers for the same trade.
  */
-export function getBrokerComparison({ buyPrice, sellPrice, quantity, segment = SEGMENTS.DELIVERY, exchange = EXCHANGES.NSE }) {
-  const growwRes = calculateCharges({ buyPrice, sellPrice, quantity, segment, exchange });
-  const buyTurnover = buyPrice * quantity;
-  const sellTurnover = sellPrice * quantity;
-  const grossPnL = sellTurnover - buyTurnover;
+export function getBrokerComparison({ buyPrice, sellPrice, quantity, segment = SEGMENTS.DELIVERY, exchange = EXCHANGES.NSE, selectedBrokerId = 'groww' }) {
+  const brokers = Object.values(BROKERS);
 
-  // Zerodha:
-  // Delivery: ₹0 Brokerage (Zero brokerage for Equity Delivery), DP charge ₹13.50 + GST = ₹15.93
-  // Intraday: ₹20 or 0.03% (whichever is lower)
-  let zerodhaBrokerage = 0;
-  if (segment === SEGMENTS.DELIVERY) {
-    zerodhaBrokerage = 0;
-  } else if (segment === SEGMENTS.INTRADAY) {
-    zerodhaBrokerage = Math.min(20, buyTurnover * 0.0003) + Math.min(20, sellTurnover * 0.0003);
-  } else {
-    zerodhaBrokerage = 40;
-  }
-  const zerodhaDP = segment === SEGMENTS.DELIVERY ? 15.93 : 0;
-  const zerodhaTaxable = zerodhaBrokerage + growwRes.breakdown.exchangeTxn.total + growwRes.breakdown.sebiCharges.total + (segment === SEGMENTS.DELIVERY ? 13.5 : 0);
-  const zerodhaGST = zerodhaTaxable * 0.18;
-  const zerodhaTotalCharges = zerodhaBrokerage + growwRes.breakdown.stt.total + growwRes.breakdown.exchangeTxn.total + zerodhaDP + growwRes.breakdown.sebiCharges.total + growwRes.breakdown.stampDuty.total + growwRes.breakdown.ipft.total + (zerodhaGST - (segment === SEGMENTS.DELIVERY ? 13.5 * 0.18 : 0));
+  return brokers.map((b) => {
+    const res = calculateCharges({
+      buyPrice,
+      sellPrice,
+      quantity,
+      segment,
+      exchange,
+      brokerId: b.id,
+    });
 
-  // Angel One:
-  // Delivery: ₹20 or 0.1% whichever is lower (or ₹0 for first 30 days, standard ₹20 or 0.1%)
-  // Intraday: ₹20 or 0.25% whichever lower
-  let angelBrokerage = 0;
-  if (segment === SEGMENTS.DELIVERY) {
-    angelBrokerage = Math.min(20, buyTurnover * 0.001) + Math.min(20, sellTurnover * 0.001);
-  } else if (segment === SEGMENTS.INTRADAY) {
-    angelBrokerage = Math.min(20, buyTurnover * 0.0025) + Math.min(20, sellTurnover * 0.0025);
-  } else {
-    angelBrokerage = 40;
-  }
-  const angelDP = segment === SEGMENTS.DELIVERY ? 23.6 : 0; // ₹20 + 18% GST = ₹23.60
-  const angelTaxable = angelBrokerage + growwRes.breakdown.exchangeTxn.total + growwRes.breakdown.sebiCharges.total + (segment === SEGMENTS.DELIVERY ? 20 : 0);
-  const angelGST = angelTaxable * 0.18;
-  const angelTotalCharges = angelBrokerage + growwRes.breakdown.stt.total + growwRes.breakdown.exchangeTxn.total + angelDP + growwRes.breakdown.sebiCharges.total + growwRes.breakdown.stampDuty.total + growwRes.breakdown.ipft.total + (angelGST - (segment === SEGMENTS.DELIVERY ? 20 * 0.18 : 0));
-
-  // Upstox:
-  // Delivery: ₹20 or 2.5% whichever lower
-  // Intraday: ₹20 or 0.05% whichever lower
-  let upstoxBrokerage = 0;
-  if (segment === SEGMENTS.DELIVERY) {
-    upstoxBrokerage = Math.min(20, buyTurnover * 0.025) + Math.min(20, sellTurnover * 0.025);
-  } else {
-    upstoxBrokerage = Math.min(20, buyTurnover * 0.0005) + Math.min(20, sellTurnover * 0.0005);
-  }
-  const upstoxDP = segment === SEGMENTS.DELIVERY ? 21.83 : 0; // ₹18.5 + GST = ₹21.83
-  const upstoxTaxable = upstoxBrokerage + growwRes.breakdown.exchangeTxn.total + growwRes.breakdown.sebiCharges.total + (segment === SEGMENTS.DELIVERY ? 18.5 : 0);
-  const upstoxGST = upstoxTaxable * 0.18;
-  const upstoxTotalCharges = upstoxBrokerage + growwRes.breakdown.stt.total + growwRes.breakdown.exchangeTxn.total + upstoxDP + growwRes.breakdown.sebiCharges.total + growwRes.breakdown.stampDuty.total + growwRes.breakdown.ipft.total + (upstoxGST - (segment === SEGMENTS.DELIVERY ? 18.5 * 0.18 : 0));
-
-  return [
-    {
-      broker: 'Groww',
-      logo: '🌱',
-      brokerage: growwRes.breakdown.brokerage.total,
-      totalCharges: growwRes.totalCharges,
-      netPnL: grossPnL - growwRes.totalCharges,
-      isCurrent: true,
-      color: 'emerald',
-      deliveryFeeText: '₹20 or 0.05% (Max ₹20)',
-    },
-    {
-      broker: 'Zerodha',
-      logo: '🪁',
-      brokerage: zerodhaBrokerage,
-      totalCharges: zerodhaTotalCharges,
-      netPnL: grossPnL - zerodhaTotalCharges,
-      isCurrent: false,
-      color: 'blue',
-      deliveryFeeText: '₹0 (Free Delivery)',
-    },
-    {
-      broker: 'Angel One',
-      logo: '👼',
-      brokerage: angelBrokerage,
-      totalCharges: angelTotalCharges,
-      netPnL: grossPnL - angelTotalCharges,
-      isCurrent: false,
-      color: 'red',
-      deliveryFeeText: '₹20 or 0.1%',
-    },
-    {
-      broker: 'Upstox',
-      logo: '🚀',
-      brokerage: upstoxBrokerage,
-      totalCharges: upstoxTotalCharges,
-      netPnL: grossPnL - upstoxTotalCharges,
-      isCurrent: false,
-      color: 'purple',
-      deliveryFeeText: '₹20 or 2.5%',
-    },
-  ];
+    return {
+      broker: b.name,
+      brokerId: b.id,
+      logo: b.logo,
+      brokerage: res.breakdown.brokerage.total,
+      totalCharges: res.totalCharges,
+      netPnL: res.netPnL,
+      isCurrent: b.id === selectedBrokerId,
+      color: b.themeColor,
+      deliveryFeeText: segment === SEGMENTS.DELIVERY ? b.deliveryText : segment === SEGMENTS.INTRADAY ? b.intradayText : b.foText,
+    };
+  });
 }
 
 /**

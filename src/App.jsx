@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
+import BrokerSelector from './components/BrokerSelector';
 import CalculatorInput from './components/CalculatorInput';
 import PnLSummaryCard from './components/PnLSummaryCard';
 import VisualChart from './components/VisualChart';
@@ -9,11 +10,13 @@ import BrokerComparisonTab from './components/BrokerComparisonTab';
 import MultiStockPortfolio from './components/MultiStockPortfolio';
 import ContractNoteModal from './components/ContractNoteModal';
 import PricingFAQ from './components/PricingFAQ';
-import { calculateCharges, SEGMENTS, EXCHANGES, formatINR } from './utils/calculator';
+import { calculateCharges, BROKERS, SEGMENTS, EXCHANGES, formatINR } from './utils/calculator';
 import { FileText, Share2, Check, TrendingUp, Sparkles, AlertCircle } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('single');
+  const [selectedBrokerId, setSelectedBrokerId] = useState('groww'); // 'groww' (Default), 'zerodha', 'angelone', etc.
+
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('brokerlens_theme');
@@ -40,6 +43,8 @@ export default function App() {
   const [isContractNoteOpen, setIsContractNoteOpen] = useState(false);
   const [sharedToast, setSharedToast] = useState(false);
 
+  const activeBroker = Object.values(BROKERS).find((b) => b.id === selectedBrokerId) || BROKERS.GROWW;
+
   // Sync dark mode class on <html> & persist to localStorage
   useEffect(() => {
     const root = document.documentElement;
@@ -65,6 +70,7 @@ export default function App() {
 
   const handleReset = () => {
     setInputMode('invested');
+    setSelectedBrokerId('groww');
     setInvestedAmount(3851);
     setQuantity(4);
     setCurrentTotalValue(4268);
@@ -93,6 +99,7 @@ export default function App() {
     quantity,
     segment,
     exchange,
+    brokerId: selectedBrokerId,
     buyOrdersCount,
     sellOrdersCount,
     isinCount,
@@ -112,26 +119,28 @@ export default function App() {
         darkMode={darkMode}
         setDarkMode={setDarkMode}
         onReset={handleReset}
+        selectedBrokerId={selectedBrokerId}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        {/* Banner with BrokerLens & Groww Charges Overview */}
+        {/* Banner with BrokerLens & Active Broker Charges Overview */}
         <div className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 rounded-2xl p-5 text-white shadow-md relative overflow-hidden">
           <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="bg-white/20 backdrop-blur-xs text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                  BrokerLens • Groww Pricing Engine
+                <span className="bg-white/20 backdrop-blur-xs text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                  <span>{activeBroker.logo}</span>
+                  <span>{activeBroker.name} Edition</span>
                 </span>
                 <span className="text-xs text-emerald-100">
-                  ₹20 or 0.05% Delivery & Intraday Brokerage
+                  {activeBroker.deliveryText}
                 </span>
               </div>
               <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">
-                Stock Brokerage, Fees & True Net P&L Calculator
+                {activeBroker.name} Stock Brokerage, Fees & True Net P&L Calculator
               </h1>
               <p className="text-xs sm:text-sm text-emerald-50/90 mt-1 max-w-2xl">
-                See beyond gross profit. Calculate all deductions — Groww brokerage, STT, DP charges, GST & exchange fees — to reveal your exact take-home returns.
+                Calculate all deductions — {activeBroker.name} brokerage, STT, DP charges (₹{activeBroker.dpTotalWithGst.toFixed(2)}/ISIN), GST & exchange fees — to reveal your exact take-home returns.
               </p>
             </div>
 
@@ -146,6 +155,12 @@ export default function App() {
             </div>
           </div>
         </div>
+
+        {/* Universal Broker Selector Bar */}
+        <BrokerSelector
+          selectedBrokerId={selectedBrokerId}
+          onSelectBroker={setSelectedBrokerId}
+        />
 
         {/* Tab 1: Single Trade Calculator */}
         {activeTab === 'single' && (
@@ -201,7 +216,7 @@ export default function App() {
             </div>
 
             {/* Educational FAQ Guide */}
-            <PricingFAQ />
+            <PricingFAQ selectedBrokerId={selectedBrokerId} />
           </div>
         )}
 
@@ -213,16 +228,17 @@ export default function App() {
               quantity={quantity}
               segment={segment}
               exchange={exchange}
+              selectedBrokerId={selectedBrokerId}
             />
-            <PricingFAQ />
+            <PricingFAQ selectedBrokerId={selectedBrokerId} />
           </div>
         )}
 
         {/* Tab 3: Multi-Stock Portfolio */}
         {activeTab === 'portfolio' && (
           <div className="animate-fade-in space-y-6">
-            <MultiStockPortfolio />
-            <PricingFAQ />
+            <MultiStockPortfolio selectedBrokerId={selectedBrokerId} />
+            <PricingFAQ selectedBrokerId={selectedBrokerId} />
           </div>
         )}
 
@@ -235,8 +251,10 @@ export default function App() {
               quantity={quantity}
               segment={segment}
               exchange={exchange}
+              selectedBrokerId={selectedBrokerId}
+              onSelectBroker={setSelectedBrokerId}
             />
-            <PricingFAQ />
+            <PricingFAQ selectedBrokerId={selectedBrokerId} />
           </div>
         )}
       </main>
@@ -257,16 +275,18 @@ export default function App() {
       <footer className="mt-12 py-6 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-center text-xs text-slate-500 dark:text-slate-400">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <div>
-            <span className="font-bold text-slate-800 dark:text-slate-200">BrokerLens</span> — Accurate Groww Pricing & Statutory Indian Stock Market Tax Rules (STT, Stamp Duty, GST, DP & SEBI Charges).
+            <span className="font-bold text-slate-800 dark:text-slate-200">BrokerLens</span> — Accurate Multi-Broker Pricing ({activeBroker.name}, Zerodha, Angel One, Upstox, Dhan, Kotak) & Statutory Indian Stock Market Tax Rules.
           </div>
           <div className="flex items-center gap-3">
+            <span className="text-slate-400">Active: {activeBroker.name}</span>
+            <span>•</span>
             <a
               href="https://groww.in/pricing"
               target="_blank"
               rel="noopener noreferrer"
               className="text-emerald-600 dark:text-emerald-400 hover:underline"
             >
-              Groww Pricing Structure
+              Groww Pricing
             </a>
             <span>•</span>
             <a

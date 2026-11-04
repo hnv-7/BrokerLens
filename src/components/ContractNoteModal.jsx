@@ -11,7 +11,13 @@ export default function ContractNoteModal({ isOpen, onClose, result, buyPrice, s
     year: 'numeric',
   });
 
-  const contractNo = `GRW-${Math.floor(100000 + Math.random() * 900000)}`;
+  const broker = result.broker || {
+    name: 'Groww',
+    entityName: 'Nextbillion Technology Pvt Ltd',
+    sebiRegNo: 'INZ000208032',
+  };
+
+  const contractNo = `${broker.name.substring(0, 3).toUpperCase()}-${Math.floor(100000 + Math.random() * 900000)}`;
 
   const handlePrint = () => {
     window.print();
@@ -40,11 +46,11 @@ export default function ContractNoteModal({ isOpen, onClose, result, buyPrice, s
           <div className="flex justify-between items-start pb-4 border-b border-slate-200 dark:border-slate-800">
             <div>
               <div className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
-                <span className="text-emerald-500">GROWW</span>
-                <span className="text-xs font-normal text-slate-400">| Nextbillion Technology Pvt Ltd</span>
+                <span className="text-emerald-500 uppercase">{broker.name}</span>
+                <span className="text-xs font-normal text-slate-400">| {broker.entityName}</span>
               </div>
               <p className="text-[10px] text-slate-400 mt-0.5">
-                SEBI Reg No: INZ000208032 | CDSL DP ID: 12088700 | NSE Member: 90177
+                SEBI Reg No: {broker.sebiRegNo} | CDSL / NSDL Member | {exchange} Exchange
               </p>
             </div>
             <div className="text-right">
@@ -85,7 +91,7 @@ export default function ContractNoteModal({ isOpen, onClose, result, buyPrice, s
             <table className="w-full text-left">
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 <tr>
-                  <td className="py-2 text-slate-600 dark:text-slate-400">Groww Brokerage Fee</td>
+                  <td className="py-2 text-slate-600 dark:text-slate-400">{broker.name} Brokerage Fee</td>
                   <td className="py-2 text-right font-mono font-bold text-slate-900 dark:text-white">
                     {formatINR(result.breakdown.brokerage.total)}
                   </td>
@@ -103,7 +109,7 @@ export default function ContractNoteModal({ isOpen, onClose, result, buyPrice, s
                   </td>
                 </tr>
                 <tr>
-                  <td className="py-2 text-slate-600 dark:text-slate-400">DP Charges (CDSL + Groww Depository)</td>
+                  <td className="py-2 text-slate-600 dark:text-slate-400">DP Charges (Depository Debit)</td>
                   <td className="py-2 text-right font-mono font-bold text-slate-900 dark:text-white">
                     {formatINR(result.breakdown.dpCharges.total)}
                   </td>
@@ -154,7 +160,7 @@ export default function ContractNoteModal({ isOpen, onClose, result, buyPrice, s
 
         {/* Modal Actions */}
         <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between">
-          <span className="text-[11px] text-slate-400">Generated for simulation purposes based on Groww pricing rules</span>
+          <span className="text-[11px] text-slate-400">Generated for simulation purposes based on {broker.name} pricing rules</span>
           <div className="flex gap-2">
             <button
               onClick={handlePrint}

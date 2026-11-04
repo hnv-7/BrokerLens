@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { calculateCharges, formatINR, SEGMENTS, EXCHANGES } from '../utils/calculator';
+import { calculateCharges, formatINR, BROKERS, SEGMENTS, EXCHANGES } from '../utils/calculator';
 import { Target, ArrowRight, Zap, CheckCircle2 } from 'lucide-react';
 
-export default function TargetReverseCalculator({ buyPrice, quantity, segment, exchange }) {
+export default function TargetReverseCalculator({ buyPrice, quantity, segment, exchange, selectedBrokerId = 'groww' }) {
   const [targetNetProfit, setTargetNetProfit] = useState(5000);
+
+  const activeBroker = BROKERS[selectedBrokerId?.toUpperCase()] || BROKERS.GROWW;
 
   // Iterative binary search to find exact Sell Price that yields targetNetProfit after all taxes
   const findRequiredSellPrice = (desiredNet) => {
@@ -15,7 +17,7 @@ export default function TargetReverseCalculator({ buyPrice, quantity, segment, e
 
     for (let i = 0; i < 40; i++) {
       const mid = (low + high) / 2;
-      const res = calculateCharges({ buyPrice, sellPrice: mid, quantity, segment, exchange });
+      const res = calculateCharges({ buyPrice, sellPrice: mid, quantity, segment, exchange, brokerId: selectedBrokerId });
 
       if (res.netPnL < desiredNet) {
         low = mid;
@@ -29,7 +31,7 @@ export default function TargetReverseCalculator({ buyPrice, quantity, segment, e
   };
 
   const requiredSellPrice = findRequiredSellPrice(targetNetProfit);
-  const simulation = calculateCharges({ buyPrice, sellPrice: requiredSellPrice, quantity, segment, exchange });
+  const simulation = calculateCharges({ buyPrice, sellPrice: requiredSellPrice, quantity, segment, exchange, brokerId: selectedBrokerId });
   const pointsGainNeeded = requiredSellPrice - buyPrice;
   const percentageGainNeeded = buyPrice > 0 ? (pointsGainNeeded / buyPrice) * 100 : 0;
 
@@ -42,7 +44,7 @@ export default function TargetReverseCalculator({ buyPrice, quantity, segment, e
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-white">Reverse Target Calculator</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Find the exact target selling price needed to achieve your desired net profit after all Groww charges.
+            Find the exact target selling price needed to achieve your desired net profit after all {activeBroker.name} fees and taxes.
           </p>
         </div>
       </div>
@@ -88,6 +90,13 @@ export default function TargetReverseCalculator({ buyPrice, quantity, segment, e
 
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 text-xs space-y-2">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
+              <span>Active Broker:</span>
+              <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                <span>{activeBroker.logo}</span>
+                <span>{activeBroker.name}</span>
+              </span>
+            </div>
+            <div className="flex justify-between text-slate-600 dark:text-slate-400">
               <span>Your Buy Price:</span>
               <span className="font-bold text-slate-900 dark:text-white font-mono">{formatINR(buyPrice)}</span>
             </div>
@@ -130,7 +139,7 @@ export default function TargetReverseCalculator({ buyPrice, quantity, segment, e
               </span>
             </div>
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
-              <span>Taxes & Groww Charges to be Deducted:</span>
+              <span>Taxes & {activeBroker.name} Fees:</span>
               <span className="font-bold text-rose-500 font-mono">
                 -{formatINR(simulation.totalCharges)}
               </span>

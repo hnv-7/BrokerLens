@@ -7,10 +7,11 @@ export default function VisualChart({ result }) {
 
   if (!result || !result.breakdown) return null;
 
-  const { breakdown, grossPnL, netPnL, totalCharges } = result;
+  const { breakdown, grossPnL, netPnL, totalCharges, broker } = result;
+  const brokerName = broker?.name || 'Broker';
 
   const chargeItems = [
-    { label: 'Brokerage', value: breakdown.brokerage.total, color: '#00D09C', desc: 'Groww fee' },
+    { label: 'Brokerage', value: breakdown.brokerage.total, color: '#00D09C', desc: `${brokerName} fee` },
     { label: 'STT / CTT', value: breakdown.stt.total, color: '#3B82F6', desc: 'Securities Tax' },
     { label: 'Exchange Txn', value: breakdown.exchangeTxn.total, color: '#8B5CF6', desc: 'NSE/BSE charge' },
     { label: 'GST (18%)', value: breakdown.gst.total, color: '#F59E0B', desc: 'Govt GST' },

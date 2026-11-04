@@ -1,7 +1,10 @@
 import React from 'react';
 import { TrendingUp, Calculator, PieChart, Layers, Sliders, FileText, ExternalLink, Moon, Sun, RotateCcw } from 'lucide-react';
+import { BROKERS } from '../utils/calculator';
 
-export default function Navbar({ activeTab, setActiveTab, darkMode, setDarkMode, onReset }) {
+export default function Navbar({ activeTab, setActiveTab, darkMode, setDarkMode, onReset, selectedBrokerId = 'groww' }) {
+  const activeBroker = Object.values(BROKERS).find((b) => b.id === selectedBrokerId) || BROKERS.GROWW;
+
   const tabs = [
     { id: 'single', label: 'Calculator', icon: Calculator },
     { id: 'target', label: 'Target / Reverse', icon: Sliders },
@@ -23,8 +26,9 @@ export default function Navbar({ activeTab, setActiveTab, darkMode, setDarkMode,
                 <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">
                   Broker<span className="text-emerald-500">Lens</span>
                 </span>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-                  Groww Edition
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                  <span>{activeBroker.logo}</span>
+                  <span>{activeBroker.name}</span>
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block">
@@ -57,17 +61,6 @@ export default function Navbar({ activeTab, setActiveTab, darkMode, setDarkMode,
 
           {/* Right Actions */}
           <div className="flex items-center gap-2">
-            <a
-              href="https://groww.in/pricing"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden lg:flex items-center gap-1.5 text-xs text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 font-medium px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-              title="Official Groww Pricing"
-            >
-              <span>Groww Pricing</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
-
             {onReset && (
               <button
                 onClick={onReset}
