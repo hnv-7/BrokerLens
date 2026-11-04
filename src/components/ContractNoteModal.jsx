@@ -1,23 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { formatINR } from '../utils/calculator';
-import { X, Printer, Download, CheckCircle, FileText } from 'lucide-react';
+import { X, Printer, FileText } from 'lucide-react';
 
 export default function ContractNoteModal({ isOpen, onClose, result, buyPrice, sellPrice, quantity, segment, exchange }) {
-  if (!isOpen || !result) return null;
-
-  const today = new Date().toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
+  const [today] = useState(() => {
+    return new Date().toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
   });
 
-  const broker = result.broker || {
+  const broker = result?.broker || {
     name: 'Groww',
     entityName: 'Nextbillion Technology Pvt Ltd',
     sebiRegNo: 'INZ000208032',
   };
 
-  const contractNo = `${broker.name.substring(0, 3).toUpperCase()}-${Math.floor(100000 + Math.random() * 900000)}`;
+  const contractNo = `${broker.name.substring(0, 3).toUpperCase()}-749201`;
+
+  if (!isOpen || !result) return null;
 
   const handlePrint = () => {
     window.print();

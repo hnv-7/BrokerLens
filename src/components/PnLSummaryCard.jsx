@@ -1,15 +1,32 @@
 import React, { useEffect } from 'react';
 import { formatINR } from '../utils/calculator';
-import { TrendingUp, TrendingDown, ShieldAlert, Award, ArrowUpRight, ArrowDownRight, Zap, Target } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Target } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-export default function PnLSummaryCard({ result, buyPrice, sellPrice, quantity, segment }) {
+export default function PnLSummaryCard({ result, buyPrice, sellPrice, quantity }) {
+  const netPnL = result?.netPnL ?? 0;
+
+  // Trigger light confetti if substantial profit
+  useEffect(() => {
+    if (netPnL > 500 && Math.random() < 0.3) {
+      try {
+        confetti({
+          particleCount: 25,
+          spread: 45,
+          origin: { y: 0.8 },
+          colors: ['#00D09C', '#3B82F6', '#10B981'],
+        });
+      } catch {
+        // ignore in non-browser env
+      }
+    }
+  }, [netPnL]);
+
   if (!result) return null;
 
   const {
     grossPnL,
     grossROI,
-    netPnL,
     netROI,
     totalCharges,
     pointsToBreakeven,
@@ -24,22 +41,6 @@ export default function PnLSummaryCard({ result, buyPrice, sellPrice, quantity, 
   const isProfit = netPnL > 0;
   const isBreakEven = Math.abs(netPnL) < 1;
   const isLoss = netPnL < 0 && !isBreakEven;
-
-  // Trigger light confetti if substantial profit
-  useEffect(() => {
-    if (netPnL > 500 && Math.random() < 0.3) {
-      try {
-        confetti({
-          particleCount: 25,
-          spread: 45,
-          origin: { y: 0.8 },
-          colors: ['#00D09C', '#3B82F6', '#10B981'],
-        });
-      } catch (e) {
-        // ignore in non-browser env
-      }
-    }
-  }, [netPnL]);
 
   return (
     <div className="space-y-4">

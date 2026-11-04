@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { formatINR } from '../utils/calculator';
-import { HelpCircle, ChevronDown, ChevronUp, FileSpreadsheet, Copy, Check } from 'lucide-react';
+import { HelpCircle, FileSpreadsheet, Copy, Check } from 'lucide-react';
 
-export default function ChargesBreakdownTable({ result, exchange, segment }) {
-  const [showAdvanced, setShowAdvanced] = useState(false);
+export default function ChargesBreakdownTable({ result, exchange }) {
   const [copied, setCopied] = useState(false);
 
   if (!result || !result.breakdown) return null;

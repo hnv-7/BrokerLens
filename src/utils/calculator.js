@@ -1,6 +1,6 @@
 /**
  * BrokerLens Universal Stock Brokerage & Charges Calculation Engine
- * Supports Groww (Default), Zerodha, Angel One, Upstox, Dhan, Kotak Neo, and ICICI Direct.
+ * Supports Groww (Default), Zerodha, Angel One, Upstox, Dhan, Kotak Neo, and Custom Broker.
  */
 
 export const BROKERS = {
@@ -112,6 +112,24 @@ export const BROKERS = {
     sebiRegNo: 'INZ000200137',
     entityName: 'Kotak Securities Limited',
   },
+  CUSTOM: {
+    id: 'custom',
+    name: 'Custom Broker',
+    logo: '🛠️',
+    themeColor: 'indigo',
+    deliveryText: 'Custom Rates',
+    intradayText: 'Custom Rates',
+    foText: 'Custom Rates',
+    dpBaseCharge: 13.5,
+    dpTotalWithGst: 15.93,
+    deliveryRate: 0.0005,
+    deliveryMaxCap: 20,
+    intradayRate: 0.0003,
+    intradayMaxCap: 20,
+    foRate: 20,
+    sebiRegNo: 'CUSTOM-001',
+    entityName: 'Custom Brokerage Entity',
+  },
 };
 
 export const BROKER_LIST = Object.values(BROKERS);
@@ -144,6 +162,7 @@ export function calculateCharges({
   segment = SEGMENTS.DELIVERY,
   exchange = EXCHANGES.NSE,
   brokerId = 'groww',
+  customSettings = null,
   buyOrdersCount = 1,
   sellOrdersCount = 1,
   isinCount = 1, // Number of company stocks debited for DP charges
@@ -155,8 +174,32 @@ export function calculateCharges({
   const safeSellOrders = Math.max(1, Number(sellOrdersCount) || 1);
   const safeIsinCount = Math.max(1, Number(isinCount) || 1);
 
-  // Find active broker configuration
-  const activeBroker = Object.values(BROKERS).find((b) => b.id === brokerId) || BROKERS.GROWW;
+  // Find active broker configuration or construct custom
+  let activeBroker = Object.values(BROKERS).find((b) => b.id === brokerId) || BROKERS.GROWW;
+
+  if (brokerId === 'custom' && customSettings) {
+    const delivRate = Number(customSettings.deliveryPercent || 0) / 100;
+    const delivCap = Number(customSettings.deliveryCap || 0);
+    const intraRate = Number(customSettings.intradayPercent || 0) / 100;
+    const intraCap = Number(customSettings.intradayCap || 0);
+    const foFlat = Number(customSettings.foRate || 0);
+    const dpBase = Number(customSettings.dpBase || 0);
+
+    activeBroker = {
+      ...activeBroker,
+      name: customSettings.name || 'Custom Broker',
+      deliveryRate: delivRate,
+      deliveryMaxCap: delivCap,
+      intradayRate: intraRate,
+      intradayMaxCap: intraCap,
+      foRate: foFlat,
+      dpBaseCharge: dpBase,
+      dpTotalWithGst: dpBase + dpBase * 0.18,
+      deliveryText: delivRate === 0 && delivCap === 0 ? '₹0 Free' : `₹${delivCap} or ${(delivRate * 100).toFixed(3)}% max`,
+      intradayText: intraRate === 0 && intraCap === 0 ? '₹0 Free' : `₹${intraCap} or ${(intraRate * 100).toFixed(3)}% max`,
+      foText: `Flat ₹${foFlat} / order`,
+    };
+  }
 
   const buyTurnover = safeBuyPrice * safeQty;
   const sellTurnover = safeSellPrice * safeQty;
@@ -168,27 +211,43 @@ export function calculateCharges({
 
   if (segment === SEGMENTS.DELIVERY) {
     const buyOrderTurnover = buyTurnover / safeBuyOrders;
-    const singleBuy = activeBroker.deliveryRate === 0
+    const singleBuy = activeBroker.deliveryRate === 0 && activeBroker.deliveryMaxCap === 0
       ? 0
-      : Math.min(activeBroker.deliveryMaxCap, buyOrderTurnover * activeBroker.deliveryRate);
+      : activeBroker.deliveryMaxCap > 0 && activeBroker.deliveryRate > 0
+      ? Math.min(activeBroker.deliveryMaxCap, buyOrderTurnover * activeBroker.deliveryRate)
+      : activeBroker.deliveryMaxCap > 0
+      ? activeBroker.deliveryMaxCap
+      : buyOrderTurnover * activeBroker.deliveryRate;
     buyBrokerage = singleBuy * safeBuyOrders;
 
     const sellOrderTurnover = sellTurnover / safeSellOrders;
-    const singleSell = activeBroker.deliveryRate === 0
+    const singleSell = activeBroker.deliveryRate === 0 && activeBroker.deliveryMaxCap === 0
       ? 0
-      : Math.min(activeBroker.deliveryMaxCap, sellOrderTurnover * activeBroker.deliveryRate);
+      : activeBroker.deliveryMaxCap > 0 && activeBroker.deliveryRate > 0
+      ? Math.min(activeBroker.deliveryMaxCap, sellOrderTurnover * activeBroker.deliveryRate)
+      : activeBroker.deliveryMaxCap > 0
+      ? activeBroker.deliveryMaxCap
+      : sellOrderTurnover * activeBroker.deliveryRate;
     sellBrokerage = singleSell * safeSellOrders;
   } else if (segment === SEGMENTS.INTRADAY) {
     const buyOrderTurnover = buyTurnover / safeBuyOrders;
-    const singleBuy = activeBroker.intradayRate === 0
+    const singleBuy = activeBroker.intradayRate === 0 && activeBroker.intradayMaxCap === 0
       ? 0
-      : Math.min(activeBroker.intradayMaxCap, buyOrderTurnover * activeBroker.intradayRate);
+      : activeBroker.intradayMaxCap > 0 && activeBroker.intradayRate > 0
+      ? Math.min(activeBroker.intradayMaxCap, buyOrderTurnover * activeBroker.intradayRate)
+      : activeBroker.intradayMaxCap > 0
+      ? activeBroker.intradayMaxCap
+      : buyOrderTurnover * activeBroker.intradayRate;
     buyBrokerage = singleBuy * safeBuyOrders;
 
     const sellOrderTurnover = sellTurnover / safeSellOrders;
-    const singleSell = activeBroker.intradayRate === 0
+    const singleSell = activeBroker.intradayRate === 0 && activeBroker.intradayMaxCap === 0
       ? 0
-      : Math.min(activeBroker.intradayMaxCap, sellOrderTurnover * activeBroker.intradayRate);
+      : activeBroker.intradayMaxCap > 0 && activeBroker.intradayRate > 0
+      ? Math.min(activeBroker.intradayMaxCap, sellOrderTurnover * activeBroker.intradayRate)
+      : activeBroker.intradayMaxCap > 0
+      ? activeBroker.intradayMaxCap
+      : sellOrderTurnover * activeBroker.intradayRate;
     sellBrokerage = singleSell * safeSellOrders;
   } else if (segment === SEGMENTS.FUTURES || segment === SEGMENTS.OPTIONS) {
     buyBrokerage = activeBroker.foRate * safeBuyOrders;
@@ -360,7 +419,7 @@ export function calculateCharges({
 /**
  * Compare charges across all supported Indian discount brokers for the same trade.
  */
-export function getBrokerComparison({ buyPrice, sellPrice, quantity, segment = SEGMENTS.DELIVERY, exchange = EXCHANGES.NSE, selectedBrokerId = 'groww' }) {
+export function getBrokerComparison({ buyPrice, sellPrice, quantity, segment = SEGMENTS.DELIVERY, exchange = EXCHANGES.NSE, selectedBrokerId = 'groww', customSettings = null }) {
   const brokers = Object.values(BROKERS);
 
   return brokers.map((b) => {
@@ -371,10 +430,11 @@ export function getBrokerComparison({ buyPrice, sellPrice, quantity, segment = S
       segment,
       exchange,
       brokerId: b.id,
+      customSettings: b.id === 'custom' ? customSettings : null,
     });
 
     return {
-      broker: b.name,
+      broker: res.broker.name,
       brokerId: b.id,
       logo: b.logo,
       brokerage: res.breakdown.brokerage.total,
@@ -382,7 +442,7 @@ export function getBrokerComparison({ buyPrice, sellPrice, quantity, segment = S
       netPnL: res.netPnL,
       isCurrent: b.id === selectedBrokerId,
       color: b.themeColor,
-      deliveryFeeText: segment === SEGMENTS.DELIVERY ? b.deliveryText : segment === SEGMENTS.INTRADAY ? b.intradayText : b.foText,
+      deliveryFeeText: segment === SEGMENTS.DELIVERY ? res.broker.deliveryText : segment === SEGMENTS.INTRADAY ? res.broker.intradayText : res.broker.foText,
     };
   });
 }

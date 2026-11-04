@@ -1,6 +1,6 @@
 import React from 'react';
 import { getBrokerComparison, formatINR } from '../utils/calculator';
-import { ShieldCheck, ArrowRight, ExternalLink, Award, CheckCircle2 } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 
 export default function BrokerComparisonTab({ buyPrice, sellPrice, quantity, segment, exchange, selectedBrokerId, onSelectBroker }) {
   const comparisons = getBrokerComparison({

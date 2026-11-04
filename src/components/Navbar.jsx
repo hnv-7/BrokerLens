@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, Calculator, PieChart, Layers, Sliders, FileText, ExternalLink, Moon, Sun, RotateCcw } from 'lucide-react';
+import { TrendingUp, Calculator, PieChart, Layers, Sliders, Moon, Sun, RotateCcw } from 'lucide-react';
 import { BROKERS } from '../utils/calculator';
 
 export default function Navbar({ activeTab, setActiveTab, darkMode, setDarkMode, onReset, selectedBrokerId = 'groww' }) {

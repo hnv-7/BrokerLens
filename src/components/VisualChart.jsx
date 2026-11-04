@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { formatINR } from '../utils/calculator';
-import { Info, PieChart as PieIcon } from 'lucide-react';
+import { PieChart as PieIcon } from 'lucide-react';
 
 export default function VisualChart({ result }) {
   const [activeSlice, setActiveSlice] = useState(null);

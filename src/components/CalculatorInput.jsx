@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SEGMENTS, EXCHANGES, STOCK_PRESETS, formatINR } from '../utils/calculator';
-import { Sparkles, SlidersHorizontal, Hash, IndianRupee, Layers } from 'lucide-react';
+import { Sparkles, SlidersHorizontal, Hash } from 'lucide-react';
 
 export default function CalculatorInput({
   inputMode,

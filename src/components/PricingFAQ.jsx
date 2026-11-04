@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, HelpCircle, BookOpen, ExternalLink } from 'lucide-react';
+import { ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
 import { BROKER_LIST } from '../utils/calculator';
 
 export default function PricingFAQ({ selectedBrokerId = 'groww' }) {

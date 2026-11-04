@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { calculateCharges, formatINR, BROKER_LIST, SEGMENTS, EXCHANGES } from '../utils/calculator';
-import { Plus, Trash2, Layers, ArrowUpRight, ArrowDownRight, RefreshCw, Sparkles } from 'lucide-react';
+import { Plus, Trash2, Layers } from 'lucide-react';
 
 export default function MultiStockPortfolio({ selectedBrokerId = 'groww' }) {
   const [stocks, setStocks] = useState([
@@ -67,7 +67,6 @@ export default function MultiStockPortfolio({ selectedBrokerId = 'groww' }) {
 
   const totalInvested = stockResults.reduce((acc, s) => acc + s.calc.buyTurnover, 0);
   const totalCurrentValue = stockResults.reduce((acc, s) => acc + s.calc.sellTurnover, 0);
-  const totalGrossPnL = stockResults.reduce((acc, s) => acc + s.calc.grossPnL, 0);
   const totalCharges = stockResults.reduce((acc, s) => acc + s.calc.totalCharges, 0);
   const totalNetPnL = stockResults.reduce((acc, s) => acc + s.calc.netPnL, 0);
   const totalROI = totalInvested > 0 ? (totalNetPnL / totalInvested) * 100 : 0;

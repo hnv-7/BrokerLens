@@ -10,8 +10,8 @@ import BrokerComparisonTab from './components/BrokerComparisonTab';
 import MultiStockPortfolio from './components/MultiStockPortfolio';
 import ContractNoteModal from './components/ContractNoteModal';
 import PricingFAQ from './components/PricingFAQ';
-import { calculateCharges, BROKERS, SEGMENTS, EXCHANGES, formatINR } from './utils/calculator';
-import { FileText, Share2, Check, TrendingUp, Sparkles, AlertCircle } from 'lucide-react';
+import { calculateCharges, BROKERS, SEGMENTS, EXCHANGES } from './utils/calculator';
+import { FileText } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('single');
@@ -41,7 +41,6 @@ export default function App() {
 
   // Contract Note Modal
   const [isContractNoteOpen, setIsContractNoteOpen] = useState(false);
-  const [sharedToast, setSharedToast] = useState(false);
 
   const activeBroker = Object.values(BROKERS).find((b) => b.id === selectedBrokerId) || BROKERS.GROWW;
 
@@ -104,12 +103,6 @@ export default function App() {
     sellOrdersCount,
     isinCount,
   });
-
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setSharedToast(true);
-    setTimeout(() => setSharedToast(false), 2000);
-  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200 font-sans flex flex-col">
@@ -204,13 +197,11 @@ export default function App() {
                   buyPrice={effectiveBuyPrice}
                   sellPrice={effectiveSellPrice}
                   quantity={quantity}
-                  segment={segment}
                 />
 
                 <ChargesBreakdownTable
                   result={calculationResult}
                   exchange={exchange}
-                  segment={segment}
                 />
               </div>
             </div>

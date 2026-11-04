@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { calculateCharges, formatINR, BROKERS, SEGMENTS, EXCHANGES } from '../utils/calculator';
-import { Target, ArrowRight, Zap, CheckCircle2 } from 'lucide-react';
+import { calculateCharges, formatINR, BROKERS } from '../utils/calculator';
+import { Target, Zap } from 'lucide-react';
 
 export default function TargetReverseCalculator({ buyPrice, quantity, segment, exchange, selectedBrokerId = 'groww' }) {
   const [targetNetProfit, setTargetNetProfit] = useState(5000);
