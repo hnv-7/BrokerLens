@@ -24,10 +24,14 @@ class HomeScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: const Color(0xFF00D09C),
+                gradient: const LinearGradient(
+                  begin: Alignment.bottomLeft,
+                  end: Alignment.topRight,
+                  colors: [Color(0xFF059669), Color(0xFF10B981), Color(0xFF2DD4BF)],
+                ),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.show_chart, color: Colors.white, size: 20),
+              child: const Icon(Icons.trending_up, color: Colors.white, size: 20),
             ),
             const SizedBox(width: 8),
             RichText(

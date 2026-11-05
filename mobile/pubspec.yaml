@@ -1,7 +1,7 @@
 name: brokerlens_mobile
 description: "BrokerLens - Stock Brokerage, Statutory Taxes & True Net P&L Calculator for Indian Stock Markets (Groww, Zerodha, Angel One, Upstox, Dhan, Kotak)"
 publish_to: 'none'
-version: 1.0.1+2
+version: 1.0.2+3
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
