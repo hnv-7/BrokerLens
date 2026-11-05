@@ -42,16 +42,12 @@ jobs:
 
       - run: flutter pub get
 
-      - run: flutter build apk --release --split-per-abi
+      - run: flutter build apk --release
 
-      - name: Rename APKs with version
+      - name: Rename APK with version
         run: |
           VERSION="${GITHUB_REF_NAME#mobile-v}"
-          cd build/app/outputs/flutter-apk
-          for f in app-*-release.apk; do
-            mv "$f" "BrokerLens-${VERSION}-${f#app-}"
-          done
-          ls -l
+          mv build/app/outputs/flutter-apk/app-release.apk "build/app/outputs/flutter-apk/BrokerLens-${VERSION}.apk"
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
