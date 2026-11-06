@@ -42,23 +42,27 @@ class _CalculatorInputFormState extends State<CalculatorInputForm> {
     super.dispose();
   }
 
+  /// Updates the controller text only when its numeric value differs from the
+  /// provider value (e.g. preset / quick target applied). Comparing numerically
+  /// avoids rewriting the text while the user is typing (such as "100." or an
+  /// empty field), which would reset the cursor to the end.
+  void _syncDecimal(TextEditingController c, double value, int fractionDigits) {
+    final current = double.tryParse(c.text) ?? 0.0;
+    if ((current - value).abs() > 0.0001) {
+      c.text = value.toStringAsFixed(fractionDigits);
+    }
+  }
+
   void _syncControllers(CalculatorProvider p) {
     if (p.inputMode == InputMode.totalAmount) {
-      if (_investedController.text != p.investedAmount.toStringAsFixed(0)) {
-        _investedController.text = p.investedAmount.toStringAsFixed(0);
-      }
-      if (_currentValController.text != p.currentTotalValue.toStringAsFixed(0)) {
-        _currentValController.text = p.currentTotalValue.toStringAsFixed(0);
-      }
+      _syncDecimal(_investedController, p.investedAmount, 0);
+      _syncDecimal(_currentValController, p.currentTotalValue, 0);
     } else {
-      if (_buyPriceController.text != p.buyPrice.toStringAsFixed(2)) {
-        _buyPriceController.text = p.buyPrice.toStringAsFixed(2);
-      }
-      if (_sellPriceController.text != p.sellPrice.toStringAsFixed(2)) {
-        _sellPriceController.text = p.sellPrice.toStringAsFixed(2);
-      }
+      _syncDecimal(_buyPriceController, p.buyPrice, 2);
+      _syncDecimal(_sellPriceController, p.sellPrice, 2);
     }
-    if (_qtyController.text != p.quantity.toString()) {
+    // Empty quantity is treated as 1 by the provider, so compare the same way.
+    if ((int.tryParse(_qtyController.text) ?? 1) != p.quantity) {
       _qtyController.text = p.quantity.toString();
     }
   }
