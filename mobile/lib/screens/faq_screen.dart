@@ -1,9 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/calculator_provider.dart';
 
 class FaqScreen extends StatelessWidget {
   const FaqScreen({Key? key}) : super(key: key);
+
+  static final Uri _releasesUrl =
+      Uri.parse('https://github.com/hnv-7/BrokerLens/releases/latest');
+
+  Future<void> _openReleases(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final opened = await launchUrl(_releasesUrl, mode: LaunchMode.externalApplication);
+    if (!opened) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Could not open the releases page.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,6 +101,24 @@ class FaqScreen extends StatelessWidget {
               ),
             );
           }).toList(),
+          const SizedBox(height: 4),
+
+          // Check for updates
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.system_update_alt, color: Color(0xFF00D09C)),
+              title: const Text(
+                'Check for updates',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+              ),
+              subtitle: const Text(
+                'Open the latest release on GitHub',
+                style: TextStyle(fontSize: 11),
+              ),
+              trailing: const Icon(Icons.open_in_new, size: 18),
+              onTap: () => _openReleases(context),
+            ),
+          ),
         ],
       ),
     );
